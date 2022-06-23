@@ -17,7 +17,7 @@ T MessageQueue<T>::receive()
     // The received object should then be returned by the receive function. 
 
     std::unique_lock<std::mutex> lock(_mutex);
-    _condition.wait(lock, [this] {return !_queue.empty();})
+    _condition.wait(lock, [this] {return !_queue.empty();});
 
     T msg = std::move(_queue.front());
     _queue.pop_front();
@@ -52,8 +52,8 @@ void TrafficLight::waitForGreen()
     // Once it receives TrafficLightPhase::green, the method returns.
     while (true){
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        
-        auto message = _queue.receive();
+
+        auto message = trafficMessageQueue.receive();
         if (message == TrafficLightPhase::green){
             return;
         }
@@ -90,7 +90,7 @@ void TrafficLight::cycleThroughPhases()
         auto timeSinceLastCheck = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - lastCheckTime);
 
         if(timeSinceLastCheck.count() >= cycleDuration){
-            _currentPhase = (_currentPhase == green) ? red : green;
+            _currentPhase = (_currentPhase == TrafficLightPhase::green) ? TrafficLightPhase::red : TrafficLightPhase::green;
 
             //auto sentTrafficPhaseFuture = std::async(std::launch::async, &MessageQueue<TrafficLightPhase>::send, &_queue, std::move(_currentPhase));
             trafficMessageQueue.send(std::move(_currentPhase));
